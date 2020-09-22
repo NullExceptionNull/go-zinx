@@ -71,7 +71,6 @@ func (c *Connection) StartReader() {
 			fmt.Println("recv buf err", err)
 			continue
 		}
-
 		r := &Request{
 			conn: c,
 			data: buf,
