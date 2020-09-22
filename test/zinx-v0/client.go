@@ -16,13 +16,12 @@ func main() {
 		return
 	}
 	for {
-		_, err = conn.Write([]byte("hello"))
+		_, err = conn.Write([]byte("hello 0.2"))
 
 		if err != nil {
 			fmt.Println("write conn error", err)
 			return
 		}
-
 		buf := make([]byte, 512)
 		cnt, err := conn.Read(buf)
 		if err != nil {

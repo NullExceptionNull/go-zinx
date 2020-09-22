@@ -3,7 +3,6 @@ package znet
 import (
 	"fmt"
 	"go-zinx/ziface"
-	"io"
 	"net"
 )
 
@@ -13,6 +12,17 @@ type Server struct {
 	IP        string
 	Version   string
 	Port      int
+}
+
+//定义当前连接的回调方法 目前demo 就是把收到的写出去
+func callBack(conn *net.TCPConn, bytes []byte, cnt int) error {
+	fmt.Println("Connection handle ....")
+	if _, err := conn.Write(bytes[:cnt]); err != nil {
+		fmt.Println("write back error", err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *Server) Start() {
@@ -34,6 +44,8 @@ func (s *Server) Start() {
 		}
 		fmt.Println("Start Zinx Server Succ ", s.Name, " Listening...")
 		//3:阻塞获取链接
+		var cid uint32
+		cid = 0
 		for {
 			//在这里死循环 不停的获取新的连接
 			conn, err := tcpListen.AcceptTCP()
@@ -41,23 +53,8 @@ func (s *Server) Start() {
 				fmt.Println("Accept error")
 				continue
 			}
-			go func() {
-				//需要不停的从连接中获取数据
-				for {
-					buf := make([]byte, 512)
-					cnt, err := conn.Read(buf)
-					if err != nil && err != io.EOF {
-						fmt.Println("Recv buf err", err)
-						continue
-					}
-					fmt.Printf("Recv client buf %s ,cnt %d\n", buf, cnt)
-					bytes := append(buf[:cnt], []byte(" from server")...)
-					if _, err := conn.Write(bytes); err != nil {
-						fmt.Println("write buf err", err)
-						continue
-					}
-				}
-			}()
+			NewConnection(conn, cid, callBack).Start()
+			cid++
 		}
 	}()
 }
