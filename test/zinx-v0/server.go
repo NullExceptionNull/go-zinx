@@ -36,7 +36,7 @@ func (b *PingRouter) PostHandle(request ziface.IRequest) {
 
 func main() {
 	//创建服务端
-	server := znet.NewServer("V0.1")
+	server := znet.NewServer()
 
 	server.AddRouter(new(PingRouter))
 

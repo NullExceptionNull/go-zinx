@@ -2,6 +2,7 @@ package znet
 
 import (
 	"fmt"
+	"go-zinx/utils"
 	"go-zinx/ziface"
 	"net"
 )
@@ -64,12 +65,12 @@ func (s *Server) Serve() {
 	select {}
 }
 
-func NewServer(name string) ziface.IServer {
+func NewServer() ziface.IServer {
 	s := &Server{
-		Name:      name,
+		Name:      utils.GlobalObject.Name,
 		IPVersion: "tcp4",
-		IP:        "0.0.0.0",
-		Port:      8999,
+		IP:        utils.GlobalObject.Host,
+		Port:      utils.GlobalObject.Port,
 		Router:    nil,
 	}
 	return s

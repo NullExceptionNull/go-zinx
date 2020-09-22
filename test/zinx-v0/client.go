@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go-zinx/utils"
 	"net"
 	"time"
 )
@@ -22,7 +23,7 @@ func main() {
 			fmt.Println("write conn error", err)
 			return
 		}
-		buf := make([]byte, 512)
+		buf := make([]byte, utils.GlobalObject.MaxPackageSize)
 		cnt, err := conn.Read(buf)
 		if err != nil {
 			fmt.Println("read buf error", err)
