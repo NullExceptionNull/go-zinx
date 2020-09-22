@@ -7,4 +7,6 @@ type IServer interface {
 	Stop()
 	//运行服务器
 	Serve()
+	//就好像GIN 的中间件
+	AddRouter(router IRouter)
 }

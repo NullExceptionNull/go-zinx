@@ -12,17 +12,12 @@ type Server struct {
 	IP        string
 	Version   string
 	Port      int
+	Router    ziface.IRouter
 }
 
-//定义当前连接的回调方法 目前demo 就是把收到的写出去
-func callBack(conn *net.TCPConn, bytes []byte, cnt int) error {
-	fmt.Println("Connection handle ....")
-	if _, err := conn.Write(bytes[:cnt]); err != nil {
-		fmt.Println("write back error", err)
-		return err
-	}
-
-	return nil
+func (s *Server) AddRouter(router ziface.IRouter) {
+	s.Router = router
+	fmt.Println("add router success")
 }
 
 func (s *Server) Start() {
@@ -53,7 +48,7 @@ func (s *Server) Start() {
 				fmt.Println("Accept error")
 				continue
 			}
-			NewConnection(conn, cid, callBack).Start()
+			NewConnection(conn, cid, s.Router).Start()
 			cid++
 		}
 	}()
@@ -75,6 +70,7 @@ func NewServer(name string) ziface.IServer {
 		IPVersion: "tcp4",
 		IP:        "0.0.0.0",
 		Port:      8999,
+		Router:    nil,
 	}
 	return s
 }

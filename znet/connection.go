@@ -7,25 +7,20 @@ import (
 )
 
 type Connection struct {
-	conn *net.TCPConn
-
-	ConnID uint32
-
+	conn     *net.TCPConn
+	ConnID   uint32
 	IsClosed bool
-
-	BallBack ziface.HandleFunc
-
 	ExitChan chan bool
+	Router   ziface.IRouter
 }
 
 //初始化链接模块
-
-func NewConnection(conn *net.TCPConn, connId uint32, callBack ziface.HandleFunc) *Connection {
+func NewConnection(conn *net.TCPConn, connId uint32, router ziface.IRouter) *Connection {
 	c := &Connection{
 		conn:     conn,
 		ConnID:   connId,
+		Router:   router,
 		IsClosed: false,
-		BallBack: callBack,
 		ExitChan: make(chan bool, 1),
 	}
 	return c
@@ -71,16 +66,20 @@ func (c *Connection) StartReader() {
 
 	for {
 		buf := make([]byte, 512)
-		cnt, err := c.conn.Read(buf)
+		_, err := c.conn.Read(buf)
 		if err != nil {
 			fmt.Println("recv buf err", err)
 			continue
 		}
-		//调用当前的Func
-		err = c.BallBack(c.conn, buf, cnt)
-		if err != nil {
-			fmt.Println("connId ", c.ConnID, "handle is error", err)
-			break
+
+		r := &Request{
+			conn: c,
+			data: buf,
 		}
+		go func(re ziface.IRequest) {
+			c.Router.PreHandle(re)
+			c.Router.Handle(re)
+			c.Router.PostHandle(re)
+		}(r)
 	}
 }
