@@ -33,14 +33,17 @@ func NewConnection(conn *net.TCPConn, connId uint32, msgHandler ziface.IMsgHandl
 //写消息 专门发送客户端消息的
 func (c *Connection) StartWriter() {
 	fmt.Println("[Writer Goroutine is Running...]")
-	select {
-	case data := <-c.msgChan:
-		if _, err := c.conn.Write(data); err != nil {
-			fmt.Println("Send data error ..", err)
+	for {
+		select {
+		case data := <-c.msgChan:
+			if _, err := c.conn.Write(data); err != nil {
+				fmt.Println("Send data error ..", err)
+			}
+		case <-c.ExitChan:
+			return
 		}
-	case <-c.ExitChan:
-		return
 	}
+
 }
 
 func (c *Connection) Start() {
