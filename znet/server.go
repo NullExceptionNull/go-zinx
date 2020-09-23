@@ -13,11 +13,11 @@ type Server struct {
 	IP        string
 	Version   string
 	Port      int
-	Router    ziface.IRouter
+	msgHandle ziface.IMsgHandle
 }
 
-func (s *Server) AddRouter(router ziface.IRouter) {
-	s.Router = router
+func (s *Server) AddRouter(msgId uint32, router ziface.IRouter) {
+	s.msgHandle.AddRouter(msgId, router)
 	fmt.Println("add router success")
 }
 
@@ -49,7 +49,7 @@ func (s *Server) Start() {
 				fmt.Println("Accept error")
 				continue
 			}
-			NewConnection(conn, cid, s.Router).Start()
+			NewConnection(conn, cid, s.msgHandle).Start()
 			cid++
 		}
 	}()
@@ -71,7 +71,7 @@ func NewServer() ziface.IServer {
 		IPVersion: "tcp4",
 		IP:        utils.GlobalObject.Host,
 		Port:      utils.GlobalObject.Port,
-		Router:    nil,
+		msgHandle: NewMsgHandle(),
 	}
 	return s
 }

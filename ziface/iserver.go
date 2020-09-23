@@ -8,5 +8,5 @@ type IServer interface {
 	//运行服务器
 	Serve()
 	//就好像GIN 的中间件
-	AddRouter(router IRouter)
+	AddRouter(msgId uint32, router IRouter)
 }
