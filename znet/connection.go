@@ -35,13 +35,18 @@ func (c *Connection) StartWriter() {
 	fmt.Println("[Writer Goroutine is Running...]")
 	select {
 	case data := <-c.msgChan:
-		c.conn.Write(data)
+		if _, err := c.conn.Write(data); err != nil {
+			fmt.Println("Send data error ..", err)
+		}
+	case <-c.ExitChan:
+		return
 	}
 }
 
 func (c *Connection) Start() {
 	fmt.Println("Conn Start () ... ConnID = ", c.ConnID)
 	go c.StartReader()
+	go c.StartWriter()
 }
 
 func (c *Connection) Stop() {
@@ -51,6 +56,7 @@ func (c *Connection) Stop() {
 		return
 	}
 	c.IsClosed = true
+	c.ExitChan <- true
 	defer c.conn.Close()
 	close(c.ExitChan)
 }
@@ -79,11 +85,7 @@ func (c *Connection) Send(data []byte, msgId uint32) error {
 		fmt.Println("Pack error msg id =", msgId)
 		return err
 	}
-	_, err = c.GetTCPConnection().Write(binary)
-	if err != nil {
-		fmt.Println("write error msg id =", msgId)
-		return err
-	}
+	c.msgChan <- binary
 	return nil
 
 }
