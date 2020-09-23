@@ -14,6 +14,7 @@ type Connection struct {
 	IsClosed   bool
 	ExitChan   chan bool
 	msgHandler ziface.IMsgHandle
+	msgChan    chan []byte
 }
 
 //初始化链接模块
@@ -24,8 +25,18 @@ func NewConnection(conn *net.TCPConn, connId uint32, msgHandler ziface.IMsgHandl
 		msgHandler: msgHandler,
 		IsClosed:   false,
 		ExitChan:   make(chan bool, 1),
+		msgChan:    make(chan []byte),
 	}
 	return c
+}
+
+//写消息 专门发送客户端消息的
+func (c *Connection) StartWriter() {
+	fmt.Println("[Writer Goroutine is Running...]")
+	select {
+	case data := <-c.msgChan:
+		c.conn.Write(data)
+	}
 }
 
 func (c *Connection) Start() {
