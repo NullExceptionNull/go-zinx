@@ -1,9 +1,10 @@
 package znet
 
 import (
+	"errors"
 	"fmt"
-	"go-zinx/utils"
 	"go-zinx/ziface"
+	"io"
 	"net"
 )
 
@@ -55,8 +56,25 @@ func (c *Connection) RemoteAddr() net.Addr {
 	return c.conn.RemoteAddr()
 }
 
-func (c *Connection) Send(data []byte) error {
-	panic("implement me")
+func (c *Connection) Send(data []byte, msgId uint32) error {
+	if c.IsClosed {
+		return errors.New("Connection is closed when sending data...")
+	}
+	dp := NewDataPack()
+
+	binary, err := dp.Pack(NewMessage(msgId, data))
+
+	if err != nil {
+		fmt.Println("Pack error msg id =", msgId)
+		return err
+	}
+	_, err = c.GetTCPConnection().Write(binary)
+	if err != nil {
+		fmt.Println("write error msg id =", msgId)
+		return err
+	}
+	return nil
+
 }
 
 //连接的读业务
@@ -66,15 +84,33 @@ func (c *Connection) StartReader() {
 	defer c.Stop()
 
 	for {
-		buf := make([]byte, utils.GlobalObject.MaxPackageSize)
-		_, err := c.conn.Read(buf)
+		dp := NewDataPack()
+		headData := make([]byte, dp.GetHeadLen())
+
+		_, err := io.ReadFull(c.GetTCPConnection(), headData)
+
 		if err != nil {
-			fmt.Println("recv buf err", err)
-			continue
+			fmt.Println("read msg head error", err)
+			break
 		}
+		message, err := dp.Unpack(headData)
+
+		if err != nil {
+			fmt.Println("unpack msg head error", err)
+			break
+		}
+		var data []byte
+		if message.GetMsgLen() > 0 {
+			data = make([]byte, message.GetMsgLen())
+			if _, err := io.ReadFull(c.GetTCPConnection(), data); err != nil {
+				fmt.Println("read msg data error : ", err)
+				break
+			}
+		}
+		message.SetMsgData(data)
 		r := &Request{
 			conn: c,
-			data: buf,
+			msg:  message,
 		}
 		go func(re ziface.IRequest) {
 			c.Router.PreHandle(re)

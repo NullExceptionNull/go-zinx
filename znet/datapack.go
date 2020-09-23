@@ -57,6 +57,5 @@ func (d *DataPack) Unpack(bin []byte) (ziface.IMessage, error) {
 	if err := binary.Read(buf, binary.LittleEndian, &msg.Id); err != nil {
 		return nil, err
 	}
-
 	return msg, nil
 }

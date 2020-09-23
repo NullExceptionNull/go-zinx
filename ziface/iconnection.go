@@ -14,7 +14,7 @@ type IConnection interface {
 	//获取远程客户端的状态
 	RemoteAddr() net.Addr
 	//发送数据
-	Send(data []byte) error
+	Send(data []byte, msgId uint32) error
 }
 
 type HandleFunc func(*net.TCPConn, []byte, int) error
