@@ -2,15 +2,22 @@ package znet
 
 import (
 	"fmt"
+	"go-zinx/utils"
 	"go-zinx/ziface"
 )
 
 type MsgHandle struct {
-	Apis map[uint32]ziface.IRouter
+	Apis           map[uint32]ziface.IRouter
+	TaskQueue      []chan ziface.IRequest
+	WorkerPoolSize uint32
 }
 
 func NewMsgHandle() *MsgHandle {
-	return &MsgHandle{Apis: make(map[uint32]ziface.IRouter)}
+	return &MsgHandle{
+		Apis:           make(map[uint32]ziface.IRouter),
+		TaskQueue:      make([]chan ziface.IRequest, utils.GlobalObject.WorkerSize),
+		WorkerPoolSize: utils.GlobalObject.WorkerSize,
+	}
 }
 
 func (m *MsgHandle) DoMsgHandler(request ziface.IRequest) {

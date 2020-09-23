@@ -4,5 +4,6 @@
   "name": "zinx",
   "version": "0.4",
   "max_package_size": 6335,
-  "MaxConnSize": 1000
+  "max_conn_size": 1000,
+  "max_worker_size": 1000
 }

@@ -128,8 +128,6 @@ func (c *Connection) StartReader() {
 			conn: c,
 			msg:  message,
 		}
-
 		go c.msgHandler.DoMsgHandler(r)
-
 	}
 }
