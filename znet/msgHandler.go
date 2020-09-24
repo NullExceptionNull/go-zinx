@@ -13,11 +13,13 @@ type MsgHandle struct {
 }
 
 func NewMsgHandle() *MsgHandle {
-	return &MsgHandle{
+	m := &MsgHandle{
 		Apis:           make(map[uint32]ziface.IRouter),
 		TaskQueue:      make([]chan ziface.IRequest, utils.GlobalObject.WorkerSize),
 		WorkerPoolSize: utils.GlobalObject.WorkerSize,
 	}
+	m.StartWorkerPool()
+	return m
 }
 
 func (m *MsgHandle) DoMsgHandler(request ziface.IRequest) {
@@ -40,4 +42,31 @@ func (m *MsgHandle) AddRouter(msgId uint32, router ziface.IRouter) {
 	m.Apis[msgId] = router
 
 	fmt.Println("Add api MsgId = ", msgId, " ok !")
+}
+
+func (m *MsgHandle) StartWorkerPool() {
+	for i := 0; i < int(m.WorkerPoolSize); i++ {
+		m.TaskQueue[i] = make(chan ziface.IRequest, utils.GlobalObject.MaxWorkerSize)
+		go m.StartOneWorker(i, m.TaskQueue[i])
+	}
+
+}
+
+func (m *MsgHandle) StartOneWorker(i int, req chan ziface.IRequest) {
+	fmt.Println("worker id = ", i, "Starting")
+	for {
+		select {
+		case request := <-req:
+			m.DoMsgHandler(request)
+		}
+	}
+}
+
+func (m *MsgHandle) SendMsgToQueue(req ziface.IRequest) {
+
+	workerId := req.GetConnection().GetConnID() % m.WorkerPoolSize
+
+	fmt.Println("add connection id = ", req.GetConnection().GetConnID(), "to ", workerId)
+
+	m.TaskQueue[workerId] <- req
 }
